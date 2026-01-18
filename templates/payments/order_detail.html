@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Order #{{ order.id }}</title>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <h1>Order #{{ order.id }}</h1>
+
+  <ul>
+    {% for oi in order_items %}
+      <li>
+        {{ oi.item.name }} x{{ oi.quantity }} —
+        {{ oi.item.price|floatformat:0 }} (в центах)
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p>Total: {{ total_display }}</p>
+
+  <button id="buyBtn">Buy Order</button>
+
+  <script>
+    const stripe = Stripe("{{ stripe_pk }}");
+
+    document.getElementById("buyBtn").addEventListener("click", async () => {
+      const res = await fetch("/buy/order/{{ order.id }}/");
+      const data = await res.json();
+
+      if (!data.session_id) {
+        alert(data.error || "Error creating checkout session");
+        return;
+      }
+
+      stripe.redirectToCheckout({ sessionId: data.session_id });
+    });
+  </script>
+</body>
+</html>
